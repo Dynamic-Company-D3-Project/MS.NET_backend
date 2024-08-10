@@ -284,13 +284,13 @@ public partial class ProjectContext : DbContext
                 .HasMaxLength(100)
                 .HasColumnName("support_type");
 
-            //entity.HasOne(d => d.Booking).WithMany(p => p.ProviderSupports)
-            //    .HasForeignKey(d => d.BookingId)
-            //    .HasConstraintName("FKhntkonem009rlvo9m7r8pm1iv");
+            entity.HasOne(d => d.Booking).WithMany(p => p.ProviderSupports)
+                .HasForeignKey(d => d.BookingId)
+                .HasConstraintName("FKhntkonem009rlvo9m7r8pm1iv");
 
-            //entity.HasOne(d => d.Provider).WithMany(p => p.ProviderSupports)
-            //    .HasForeignKey(d => d.ProviderId)
-            //    .HasConstraintName("FKkvaosqp0bbsf5wpgni3qy5l10");
+            entity.HasOne(d => d.Provider).WithMany(p => p.ProviderSupports)
+                .HasForeignKey(d => d.ProviderId)
+                .HasConstraintName("FKkvaosqp0bbsf5wpgni3qy5l10");
         });
 
         modelBuilder.Entity<Review>(entity =>

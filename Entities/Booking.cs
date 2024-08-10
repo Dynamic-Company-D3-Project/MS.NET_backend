@@ -19,13 +19,13 @@ public partial class Booking
 
     public long UserId { get; set; }
 
-    public virtual Provider Provider { get; set; } 
+    public virtual Provider Provider { get; set; }
 
-    //public virtual ICollection<ProviderSupport> ProviderSupports { get; } = new List<ProviderSupport>();
+    public virtual ICollection<ProviderSupport> ProviderSupports { get; } = new List<ProviderSupport>();
 
     public virtual Subcategory Subcategory { get; set; } = null!;
 
     public virtual User User { get; set; } = null!;
 
-    //public virtual ICollection<UserSupport> UserSupports { get; } = new List<UserSupport>();
+    public virtual ICollection<UserSupport> UserSupports { get; } = new List<UserSupport>();
 }
