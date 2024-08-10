@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WEBAPI.Entities;
+using WEBAPI.EntityDTOs;
 
 namespace WEBAPI.Controllers
 {
@@ -27,7 +28,92 @@ namespace WEBAPI.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Booking>>> GetAllBookings()
         {
-            return await DBContext.Bookings.ToListAsync();
+            var bookings = DBContext.Bookings.Include(b => b.User).Include(b => b.Provider)
+                .Select(b => new AllOrdersDTO
+                {
+                    BookingId = b.BookingId,
+                    BookingDate = b.BookingDate,
+                    Status = b.Status,
+                    BookingTime = b.BookingTime,
+                    ProviderId = b.ProviderId,
+                    SubcategoryId = b.SubcategoryId,
+                    UserId = b.UserId,
+                    User = new UserDTO
+                    {
+                        UserId = b.User.Id,
+                        Name =( b.User.FirstName + b.User.LastName),
+                      
+                    },
+                    Provider = new ProviderDTO
+                    {
+                        ProviderId = b.Provider.Id,
+                        Name = b.Provider.FirstName+b.Provider.LastName
+                        
+                    }
+                }).ToListAsync();
+            return Ok(bookings);
+        }
+
+        [Route("getOrders/ongoing")]
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<Booking>>> GetOngoingBookings()
+        {
+            var bookings = DBContext.Bookings.Include(b => b.User).Include(b => b.Provider)
+                .Where(b=> b.Status == "ONGOING")
+                .Select(b => new AllOrdersDTO
+                {
+                    BookingId = b.BookingId,
+                    BookingDate = b.BookingDate,
+                    Status = b.Status,
+                    BookingTime = b.BookingTime,
+                    ProviderId = b.ProviderId,
+                    SubcategoryId = b.SubcategoryId,
+                    UserId = b.UserId,
+                    User = new UserDTO
+                    {
+                        UserId = b.User.Id,
+                        Name = (b.User.FirstName + b.User.LastName),
+
+                    },
+                    Provider = new ProviderDTO
+                    {
+                        ProviderId = b.Provider.Id,
+                        Name = b.Provider.FirstName + b.Provider.LastName
+
+                    }
+                }).ToListAsync();
+            return Ok(bookings);
+        }
+
+        [Route("getOrders/pending")]
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<Booking>>> GetPendingBookings()
+        {
+            var bookings = DBContext.Bookings.Include(b => b.User).Include(b => b.Provider)
+                .Where(b => b.Status == "PENDING")
+                .Select(b => new AllOrdersDTO
+                {
+                    BookingId = b.BookingId,
+                    BookingDate = b.BookingDate,
+                    Status = b.Status,
+                    BookingTime = b.BookingTime,
+                    ProviderId = b.ProviderId,
+                    SubcategoryId = b.SubcategoryId,
+                    
+                    User = new UserDTO
+                    {
+                        UserId = b.User.Id,
+                        Name = (b.User.FirstName + b.User.LastName),
+
+                    },
+                    Provider = new ProviderDTO
+                    {
+                        ProviderId = b.Provider.Id,
+                        Name = b.Provider.FirstName + b.Provider.LastName
+
+                    }
+                }).ToListAsync();
+            return Ok(bookings);
         }
 
         // POST: AdminController/Delete/5
