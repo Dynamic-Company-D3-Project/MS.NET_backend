@@ -17,12 +17,7 @@ namespace WEBAPI.Controllers
             this.DBContext = DBContext;
         }
 
-        [Route("providers")]
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Provider>>> GetProvider()
-        {
-            return await DBContext.Providers.ToListAsync();
-        }
+       
 
      
 
@@ -101,7 +96,7 @@ namespace WEBAPI.Controllers
                     BookingTime = b.BookingTime,
                     ProviderId = b.ProviderId,
                     SubcategoryId = b.SubcategoryId,
-
+                    UserId = b.UserId,
                     User = new UserDTO
                     {
                         UserId = b.User.Id,
