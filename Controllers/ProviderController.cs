@@ -10,6 +10,7 @@ namespace WEBAPI.Controllers
     public class ProviderController : ControllerBase
     {
         private readonly ProjectContext DBContext;
+        
 
         public ProviderController(ProjectContext dbContext)
         {
@@ -18,7 +19,8 @@ namespace WEBAPI.Controllers
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable< Provider>>> GetProviders() {
-            return await DBContext.Providers.ToListAsync();
+            var providers = await DBContext.Providers.Where(p=>p.IsDeleted==0).ToListAsync();
+            return Ok(providers) ;
         }
 
 
