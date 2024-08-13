@@ -52,4 +52,4 @@ Build the project to ensure everything is set up correctly:
 To run the project on your local machine, use the following command:
 
 ```dotnet run```
-By default, the API will be available at https://localhost:5001 (for HTTPS) or http://localhost:5000 (for HTTP)
+By default, the API will be available at https://localhost:7223 (for HTTPS) or http://localhost:5000 (for HTTP)
