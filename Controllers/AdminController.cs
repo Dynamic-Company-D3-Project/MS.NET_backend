@@ -17,11 +17,51 @@ namespace WEBAPI.Controllers
             this.DBContext = DBContext;
         }
 
-       
 
-     
 
-        [Route("getOrders")]
+        [HttpGet("users")]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            var users = await DBContext.Users
+                .Select(user => new
+                {
+                    user.Id,
+                    user.FirstName,
+                    user.LastName,
+                    user.Email,
+                    user.PhoneNumber,
+                    user.Gender,
+                    user.Age,
+                    user.CreationTime,
+                    user.LastLoginTime,
+                    user.ImagePath,
+                    user.IsDeleted
+                })
+                .ToListAsync();
+
+            return Ok(users);
+        }
+
+        [HttpPost("admin/login")]
+        public async Task<IActionResult> Login([FromBody] AdminLoginDTO loginDto)
+        {
+            var admin = await DBContext.Admins
+                .FirstOrDefaultAsync(a => a.Email == loginDto.Email);
+
+            if (admin == null || admin.Password != loginDto.Password)
+            {
+                return Unauthorized("Invalid email or password.");
+            }
+
+            // Update last login time
+            admin.LastLoginTime = DateTime.UtcNow;
+            await DBContext.SaveChangesAsync();
+
+            return Ok(admin);
+        }
+
+
+        [Route("getBookings")]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Booking>>> GetAllBookings()
         {
@@ -113,60 +153,157 @@ namespace WEBAPI.Controllers
             return Ok(bookings);
         }
 
-        [HttpPut("getOrders/pending/{id}/set-ongoing")]
-        public async Task<IActionResult> MarkBookingAsOngoing(long id)
+
+        [HttpPut("bookings/{id}/assign")]
+        public async Task<IActionResult> UpdateBooking(long id, [FromBody] AssignProviderDTO updateDto)
         {
             // Fetch the booking by ID
             var booking = await DBContext.Bookings.FindAsync(id);
 
+            if (booking == null)
+            {
+                return NotFound("Booking not found.");
+            }
+
+            // Update booking details
+            booking.Status = updateDto.Status;
+            booking.ProviderId = updateDto.ProviderId;
+
+            // Save changes
+            await DBContext.SaveChangesAsync();
+
+            return Ok("Booking updated successfully.");
+        }
+
+
+        //[HttpPut("getOrders/ongoing/{id}/set-complete")]
+        //public async Task<IActionResult> MarkBookingAsCompleted(long id)
+        //{
+        //    // Fetch the booking by ID
+        //    var booking = await DBContext.Bookings.FindAsync(id);
+
+
+        //    if (booking == null)
+        //    {
+        //        return NotFound(); 
+        //    }
+
+
+        //    if (booking.Status != "ONGOING")
+        //    {
+        //        return BadRequest("Booking status is not ongoing"); // Return 400 if the status is not "ONGOING"
+        //    }
+
+
+        //    booking.Status = "COMPLETED";
+
+
+        //    await DBContext.SaveChangesAsync();
+
+        //    return Ok("Booking status updated to COMPLETED."); // Return a 200 response indicating success
+        //}
+
+        [HttpPut("getOrders/ongoing/{id}/set-complete")]
+        public async Task<IActionResult> MarkBookingAsCompleted(long id)
+        {
+            // Fetch the booking by ID
+            // Fetch the booking by ID
+            var booking = await DBContext.Bookings.FindAsync(id);
+            var subcategory = await DBContext.Subcategories.FindAsync(booking.SubcategoryId);
 
             if (booking == null)
             {
                 return NotFound();
             }
 
-
-            if (booking.Status != "PENDING")
+            if (booking.Status != "ONGOING")
             {
-                return BadRequest("Booking status is not pending"); // Return 400 if the status is not "ONGOING"
+                return BadRequest("Booking status is not ongoing");
             }
 
+            // Create a new order from the booking information
+            var order = new Order
+            {
+                OrderDate = booking.BookingDate, 
+                Description = subcategory.Description, 
+                OrderRate = (decimal?)subcategory.Price, 
+                Status = "COMPLETED",
+                OrderTime = booking.BookingTime, 
+                ProviderId = booking.ProviderId,
+                SubcategoryId = booking.SubcategoryId,
+                UserId = booking.UserId
+            };
 
-            booking.Status = "ONGOING";
+            // Add the order to the Orders table
+            DBContext.Orders.Add(order);
 
+            // Remove the booking from the Bookings table
+            DBContext.Bookings.Remove(booking);
 
+            // Save changes to the database
             await DBContext.SaveChangesAsync();
 
-            return Ok("Booking status updated to COMPLETED."); // Return a 200 response indicating success
+            return Ok("Booking status updated to COMPLETED and moved to Orders.");// Return a 200 response indicating success
         }
 
-
-        [HttpPut("getOrders/ongoing/{id}/set-complete")]
-        public async Task<IActionResult> MarkBookingAsCompleted(long id)
+        [HttpPut("getOrders/{id}/set-cancelled")]
+        public async Task<IActionResult> MarkBookingAsCancelled(long id)
         {
             // Fetch the booking by ID
             var booking = await DBContext.Bookings.FindAsync(id);
 
-          
             if (booking == null)
             {
-                return NotFound(); 
+                return NotFound("Booking not found.");
             }
 
-           
-            if (booking.Status != "ONGOING")
+
+            // Create a new order from the booking information
+            var order = new Order
             {
-                return BadRequest("Booking status is not ongoing"); // Return 400 if the status is not "ONGOING"
-            }
+                OrderDate = booking.BookingDate, // Using BookingDate as OrderDate
+                Description = null, // Assuming there is no direct description in Booking, set as null or map accordingly
+                OrderRate = null, // Assuming no direct rate in Booking, set as null or map accordingly
+                Status = "CANCELLED",
+                OrderTime = booking.BookingTime, // Using BookingTime as OrderTime
+                ProviderId = booking.ProviderId,
+                SubcategoryId = booking.SubcategoryId,
+                UserId = booking.UserId
+            };
 
-            
-            booking.Status = "COMPLETED";
+            // Add the order to the Orders table
+            DBContext.Orders.Add(order);
+          
 
-           
+            // Remove the booking from the Bookings table
+            DBContext.Bookings.Remove(booking);
+
+            // Save changes to the database
             await DBContext.SaveChangesAsync();
 
-            return Ok("Booking status updated to COMPLETED."); // Return a 200 response indicating success
+            return Ok("Booking status updated to CANCELLED and moved to Orders.");
         }
+
+        [HttpGet("orders")]
+        public async Task<IActionResult> GetAllOrders()
+        {
+            // Fetch all orders from the database
+            var orders = await DBContext.Orders
+                                         // Include related entities if needed
+                                        .Include(b=>b.Subcategory)
+                                        
+                                        .ToListAsync();
+
+            // Check if there are any orders
+            if (orders == null || !orders.Any())
+            {
+                return NotFound("No orders found.");
+            }
+
+            // Return the list of orders
+            return Ok(orders);
+        }
+
 
 
         // POST: AdminController/Delete/5

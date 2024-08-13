@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace WEBAPI.Entities;
 
@@ -27,6 +28,7 @@ public partial class Subcategory
 
     public virtual Category Category { get; set; } = null!;
 
+    [JsonIgnore]
     public virtual ICollection<Order> Orders { get; } = new List<Order>();
 
     public virtual ICollection<Review> Reviews { get; } = new List<Review>();

@@ -17,7 +17,19 @@ namespace WEBAPI
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
-             builder.Services.AddEntityFrameworkMySQL()
+          
+
+            // Configure CORS
+            builder.Services.AddCors(options =>
+            {
+                options.AddDefaultPolicy(builder =>
+                {
+                    builder.AllowAnyOrigin() // Allow only this origin
+                           .AllowAnyMethod()   // Allow any HTTP method
+                           .AllowAnyHeader();  // Allow any headers
+                });
+            });
+            builder.Services.AddEntityFrameworkMySQL()
     .AddDbContext<ProjectContext>(options =>
     {
         options.UseMySQL(builder.Configuration.GetConnectionString("DefaultConnection"));
@@ -35,7 +47,7 @@ namespace WEBAPI
             app.UseHttpsRedirection();
 
             app.UseAuthorization();
-
+            app.UseCors();
 
             app.MapControllers();
 
