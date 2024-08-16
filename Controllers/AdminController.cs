@@ -72,7 +72,7 @@ namespace WEBAPI.Controllers
                     BookingDate = b.BookingDate,
                     Status = b.Status,
                     BookingTime = b.BookingTime,
-                    ProviderId = b.ProviderId,
+                    ProviderId = b.ProviderId??0,
                     SubcategoryId = b.SubcategoryId,
                     UserId = b.UserId,
                     User = new UserDTO
@@ -103,7 +103,7 @@ namespace WEBAPI.Controllers
                     BookingDate = b.BookingDate,
                     Status = b.Status,
                     BookingTime = b.BookingTime,
-                    ProviderId = b.ProviderId,
+                    ProviderId = b.ProviderId ?? 0,
                     SubcategoryId = b.SubcategoryId,
                     UserId = b.UserId,
                     User = new UserDTO
@@ -126,7 +126,7 @@ namespace WEBAPI.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Booking>>> GetPendingBookings()
         {
-            var bookings = DBContext.Bookings.Include(b => b.User).Include(b => b.Provider)
+            var bookings = DBContext.Bookings.Include(b => b.User)
                 .Where(b => b.Status == "PENDING")
                 .Select(b => new AllOrdersDto
                 {
@@ -134,21 +134,17 @@ namespace WEBAPI.Controllers
                     BookingDate = b.BookingDate,
                     Status = b.Status,
                     BookingTime = b.BookingTime,
-                    ProviderId = b.ProviderId,
+                    
                     SubcategoryId = b.SubcategoryId,
                     UserId = b.UserId,
                     User = new UserDTO
                     {
                         UserId = b.User.Id,
                         Name = (b.User.FirstName + b.User.LastName),
+                        Gender=b.User.Gender
 
                     },
-                    Provider = new ProviderDTO
-                    {
-                        ProviderId = b.Provider.Id,
-                        Name = b.Provider.FirstName + b.Provider.LastName
-
-                    }
+                    
                 }).ToListAsync();
             return Ok(bookings);
         }
@@ -164,10 +160,11 @@ namespace WEBAPI.Controllers
             {
                 return NotFound("Booking not found.");
             }
-
+            var provider = await DBContext.Providers.FindAsync(updateDto.ProviderId);
             // Update booking details
             booking.Status = updateDto.Status;
             booking.ProviderId = updateDto.ProviderId;
+            booking.Provider = provider;
 
             // Save changes
             await DBContext.SaveChangesAsync();
@@ -209,7 +206,7 @@ namespace WEBAPI.Controllers
             // Fetch the booking by ID
             // Fetch the booking by ID
             var booking = await DBContext.Bookings.FindAsync(id);
-            var subcategory = await DBContext.Subcategories.FindAsync(booking.SubcategoryId);
+            
 
             if (booking == null)
             {
@@ -220,7 +217,7 @@ namespace WEBAPI.Controllers
             {
                 return BadRequest("Booking status is not ongoing");
             }
-
+            var subcategory = await DBContext.Subcategories.FindAsync(booking.SubcategoryId);
             // Create a new order from the booking information
             var order = new Order
             {
@@ -229,9 +226,10 @@ namespace WEBAPI.Controllers
                 OrderRate = (decimal?)subcategory.Price, 
                 Status = "COMPLETED",
                 OrderTime = booking.BookingTime, 
-                ProviderId = booking.ProviderId,
+                ProviderId = booking.ProviderId ?? 0,
                 SubcategoryId = booking.SubcategoryId,
-                UserId = booking.UserId
+                UserId = booking.UserId,
+                AddressId = booking.AddressId
             };
 
             // Add the order to the Orders table
@@ -266,7 +264,7 @@ namespace WEBAPI.Controllers
                 OrderRate = null, // Assuming no direct rate in Booking, set as null or map accordingly
                 Status = "CANCELLED",
                 OrderTime = booking.BookingTime, // Using BookingTime as OrderTime
-                ProviderId = booking.ProviderId,
+                ProviderId = booking.ProviderId ?? 0,
                 SubcategoryId = booking.SubcategoryId,
                 UserId = booking.UserId
             };

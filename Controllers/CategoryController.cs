@@ -18,10 +18,11 @@ namespace WEBAPI.Controllers
             DBContext = dbContext;
         }
 
-        [HttpGet("getSubcategory")]
+        [HttpGet("getSubcategories")]
         public async Task<ActionResult<SubCategoryDTO>> GetSubcategory()
         {
             var subcategories = await DBContext.Subcategories
+                .Where(s=> s.IsVisible ==1)
             .Select(s => new SubCategoryDTO
             {
                 Id = s.Id,
@@ -65,7 +66,7 @@ namespace WEBAPI.Controllers
             return Ok(subcategory);
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("subCategory/{id}")]
         public async Task<ActionResult<SubCategoryDTO>> GetSubcategoryById(int id)
         {
             var subcategory = await DBContext.Subcategories
@@ -92,6 +93,11 @@ namespace WEBAPI.Controllers
             return Ok(subcategory);
         }
 
+        [HttpGet()]
+        public async Task<ActionResult<SubCategoryDTO>> GetALlCategories() {
+            return Ok(DBContext.Categories.ToListAsync());
+        }
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteSubcategory(int id)
         {
@@ -101,8 +107,8 @@ namespace WEBAPI.Controllers
             {
                 return NotFound(new { message = $"Subcategory with Id = {id} not found." });
             }
-
-            DBContext.Subcategories.Remove(subcategory);
+            subcategory.IsVisible = 0;
+            //DBContext.Subcategories.Remove(subcategory);
             await DBContext.SaveChangesAsync();
 
             return Ok(new { message = $"Subcategory with Id = {id} deleted successfully." });

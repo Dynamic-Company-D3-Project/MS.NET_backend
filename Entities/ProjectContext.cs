@@ -132,6 +132,7 @@ public partial class ProjectContext : DbContext
                 .HasColumnName("status");
             entity.Property(e => e.SubcategoryId).HasColumnName("subcategory_id");
             entity.Property(e => e.UserId).HasColumnName("user_id");
+            entity.Property(e => e.AddressId).HasColumnName("address_id");
 
             entity.HasOne(d => d.Provider).WithMany(p => p.Bookings)
                 .HasForeignKey(d => d.ProviderId)
@@ -198,6 +199,7 @@ public partial class ProjectContext : DbContext
                 .HasColumnName("status");
             entity.Property(e => e.SubcategoryId).HasColumnName("subcategory_id");
             entity.Property(e => e.UserId).HasColumnName("user_id");
+            entity.Property(e => e.AddressId).HasColumnName("address_id");
 
             entity.HasOne(d => d.Provider).WithMany(p => p.Orders)
                 .HasForeignKey(d => d.ProviderId)

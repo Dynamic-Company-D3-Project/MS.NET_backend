@@ -23,6 +23,8 @@ public partial class Order
 
     public long UserId { get; set; }
 
+    public long AddressId { get; set; }
+
     public virtual Provider Provider { get; set; } = null!;
 
     public virtual ICollection<Review> Reviews { get; } = new List<Review>();
